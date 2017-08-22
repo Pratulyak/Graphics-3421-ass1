@@ -1,6 +1,7 @@
 package ass1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.jogamp.opengl.GL2;
@@ -271,12 +272,54 @@ public class GameObject {
 		// TODO: setting the model transform appropriately
 		// draw the object (Call drawSelf() to draw the object itself)
 		// and all its children recursively
-		double objPosition = this.getPosition();
+		double[] objPosition = this.getPosition();
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glPushMatrix();
-			gl.glTranslated(, 2.5, 0);
-			gl.glRotated(theta, 0, 0, 1);
-			this.drawSelf(gl);
+		gl.glTranslated(objPosition[0], objPosition[1], 0);
+		gl.glRotated(this.getRotation(), 0, 0, 1);
+		gl.glScaled(this.getScale(), this.getScale(), 1);
+		this.drawSelf(gl);
+		for (GameObject child : this.myChildren) {
+			child.draw(gl);
+		}
 		gl.glPopMatrix();
+
+	}
+
+	/**
+	 * 
+	 * You need to multiply the child's origin by the parent's model matrix to
+	 * get the right answer.: This function getModelMatrix get's the model
+	 * matrix to get the final column of the matrix to get the origins
+	 */
+	public double[][] getModelMatrix() {
+		GameObject parent = this.myParent;
+		double[][] modelMatrix = new double[][] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, };// set
+																							// to
+																							// identity
+																							// if
+																							// root
+		if (parent == null) {
+			return modelMatrix;
+		} else {
+			modelMatrix = parent.getModelMatrix();
+		}
+		double[][] translationMatrix, rotationMatrix, ScaleMatrix;// current or
+		// child
+		// object
+		// matrices
+
+		translationMatrix = MathUtil.translationMatrix(this.getPosition());
+		rotationMatrix = MathUtil.rotationMatrix(this.getRotation());
+		ScaleMatrix = MathUtil.scaleMatrix(this.getScale());
+
+		// m * t * r * s = answer
+
+		modelMatrix = MathUtil.multiply(modelMatrix, translationMatrix);
+		rotationMatrix = MathUtil.multiply(rotationMatrix, ScaleMatrix);
+		modelMatrix = MathUtil.multiply(modelMatrix, rotationMatrix);
+
+		return modelMatrix;
 
 	}
 
@@ -285,11 +328,15 @@ public class GameObject {
 	 * 
 	 * TODO: Write this method
 	 * 
-	 * @return a point in world coordinats in [x,y] form
+	 * @return a point in world coordinates in [x,y] form
 	 */
 	public double[] getGlobalPosition() {
-		double[] p = new double[2];
-		return p;
+		double[][] modelMatrix = this.getModelMatrix();
+		double[] globalPosition = new double[2];
+
+		globalPosition[0] = modelMatrix[0][2];// last column matters
+		globalPosition[1] = modelMatrix[1][2];
+		return globalPosition;
 	}
 
 	/**
@@ -301,7 +348,14 @@ public class GameObject {
 	 *         the range (-180, 180) degrees.
 	 */
 	public double getGlobalRotation() {
-		return 0;
+		double angle;
+		GameObject parent = this.getParent();
+		if (parent == null) {
+			return this.myRotation;
+		} else {
+			angle = parent.getGlobalRotation() + this.getRotation();
+		}
+		return MathUtil.normaliseAngle(angle);
 	}
 
 	/**
@@ -312,7 +366,14 @@ public class GameObject {
 	 * @return the global scale of the object
 	 */
 	public double getGlobalScale() {
-		return 1.0;
+		double scale;
+		GameObject parent = this.getParent();
+		if (parent == null) {
+			return this.myScale;
+		} else {
+			scale = parent.getGlobalScale() * this.getScale();
+		}
+		return scale;
 	}
 
 	/**

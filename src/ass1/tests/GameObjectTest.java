@@ -1,5 +1,7 @@
 package ass1.tests;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import ass1.GameObject;
@@ -102,9 +104,10 @@ public class GameObjectTest extends TestCase {
         // the child is also moved:
         
         double[] p = child.getGlobalPosition();
+       
         double r = child.getGlobalRotation();
         double s = child.getGlobalScale();
-        
+        System.out.println("testing assert line 121 "+"child position = "+ Arrays.toString(p) + r +"  testing r and s "+ s );
         assertEquals(-2, p[0], EPSILON);
         assertEquals(3, p[1], EPSILON);
         assertEquals(90, r, EPSILON);
