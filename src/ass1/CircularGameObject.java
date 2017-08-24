@@ -3,8 +3,6 @@
  */
 package ass1;
 
-import java.lang.reflect.Array;
-
 import com.jogamp.opengl.GL2;
 
 /**
@@ -73,22 +71,33 @@ public class CircularGameObject extends GameObject {
 	@Override
 	public void drawSelf(GL2 gl) {
 
+		double numberOfVertices = 32;
+		double angle = Math.PI / numberOfVertices;
+		// System.out.println(angle);
+
 		if (this.myFillColour != null) {
 			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 			gl.glColor4d(this.myFillColour[0], this.myFillColour[1], this.myFillColour[2], this.myFillColour[3]);
 			gl.glBegin(GL2.GL_POLYGON);
-			for (int i = 0; i < Array.getLength(this.myPoints) - 1; i++) {
-				gl.glVertex2d(this.myPoints.get(i)[0], this.myPoints.get(i)[1]);
+			for (int i = 0; i < 32; i++) {
+				angle = 2 * angle * i;
+				gl.glVertex2d(this.getRadius() * Math.cos(angle), this.getRadius() * Math.sin(angle));
+				angle = Math.PI / 32;
 			}
+			gl.glEnd();
 		}
 
 		if (this.myLineColour != null) {
 			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
 			gl.glColor4d(this.myFillColour[0], this.myFillColour[1], this.myFillColour[2], this.myFillColour[3]);
 			gl.glBegin(GL2.GL_POLYGON);
-			for (int i = 0; i < Array.getLength(this.myPoints) - 1; i++) {
-				gl.glVertex2d(this.myPoints.get(i)[0], this.myPoints.get(i)[1]);
+			for (int i = 0; i < 32; i++) {
+				angle = 2 * angle * i;
+				gl.glVertex2d(this.getRadius() * Math.cos(angle), this.getRadius() * Math.sin(angle));
+				angle = Math.PI / 32;
 			}
+			gl.glEnd();
 		}
+		gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);
 	}
 }

@@ -1,7 +1,6 @@
 package ass1;
 
 import java.util.List;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import com.jogamp.opengl.GL2;
@@ -174,6 +173,6 @@ public class PolygonalGameObject extends GameObject {
 			}
 			gl.glEnd();
 		}
-		gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);
+		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 	}
 }
