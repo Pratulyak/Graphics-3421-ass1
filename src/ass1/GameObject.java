@@ -273,7 +273,7 @@ public class GameObject {
 		// draw the object (Call drawSelf() to draw the object itself)
 		// and all its children recursively
 		double[] objPosition = this.getPosition();
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		//gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glPushMatrix();
 		gl.glTranslated(objPosition[0], objPosition[1], 0);
 		gl.glRotated(this.getRotation(), 0, 0, 1);
@@ -292,32 +292,28 @@ public class GameObject {
 	 * get the right answer.: This function getModelMatrix get's the model
 	 * matrix to get the final column of the matrix to get the origins
 	 */
-	public double[][] getModelMatrix() {
-		GameObject parent = this.myParent;
+	public double[][] getModelMatrix(double[] v, double rotation, double scale) {
+
 		double[][] modelMatrix = new double[][] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, };// set
 																							// to
 																							// identity
 																							// if
 																							// root
-		if (parent == null) {
-			return modelMatrix;
-		} else {
-			modelMatrix = parent.getModelMatrix();
-		}
+
 		double[][] translationMatrix, rotationMatrix, ScaleMatrix;// current or
 		// child
 		// object
 		// matrices
 
-		translationMatrix = MathUtil.translationMatrix(this.getPosition());
-		rotationMatrix = MathUtil.rotationMatrix(this.getRotation());
-		ScaleMatrix = MathUtil.scaleMatrix(this.getScale());
+		modelMatrix = MathUtil.translationMatrix(v);
+		rotationMatrix = MathUtil.rotationMatrix(rotation);
+		ScaleMatrix = MathUtil.scaleMatrix(scale);
 
 		// m * t * r * s = answer
 
-		modelMatrix = MathUtil.multiply(modelMatrix, translationMatrix);
-		rotationMatrix = MathUtil.multiply(rotationMatrix, ScaleMatrix);
+		// modelMatrix = MathUtil.multiply(modelMatrix, translationMatrix);
 		modelMatrix = MathUtil.multiply(modelMatrix, rotationMatrix);
+		modelMatrix = MathUtil.multiply(modelMatrix, ScaleMatrix);
 
 		return modelMatrix;
 
@@ -331,7 +327,17 @@ public class GameObject {
 	 * @return a point in world coordinates in [x,y] form
 	 */
 	public double[] getGlobalPosition() {
-		double[][] modelMatrix = this.getModelMatrix();
+		GameObject parent = this.getParent();
+
+		double[][] modelMatrix = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+		modelMatrix = this.getModelMatrix(this.myTranslation, this.myRotation, this.myScale);
+		double[][] parentModelM;
+		while (parent.myParent != null) {
+			parentModelM = getModelMatrix(parent.myTranslation, parent.myRotation, parent.myScale);
+			modelMatrix = MathUtil.multiply(parentModelM, modelMatrix);
+			parent = parent.myParent;
+		}
+
 		double[] globalPosition = new double[2];
 
 		globalPosition[0] = modelMatrix[0][2];// last column matters
@@ -386,11 +392,49 @@ public class GameObject {
 	 * 
 	 * @param parent
 	 */
+
 	public void setParent(GameObject parent) {
+
+		// multiplying the global position of old and new parent's inverse model
+		// matrix
+		// gets the solution. NOTE M = T*R*S but to invert m-1 = S * R * T (
+		// Inverse matrix of r s t );
+		// so solution = m-1 * globalP(child) = local trqnslation.
+
+		/* gets the current global variables */
+		double[] globalPosition = this.getGlobalPosition();
+		double globalRotation = this.getGlobalRotation();
+		double globalScale = this.getGlobalScale();
 
 		myParent.myChildren.remove(this);
 		myParent = parent;
 		myParent.myChildren.add(this);
+		/* new parents global variables */
+		double[] parentPosition = parent.getGlobalPosition();
+		double parentRotation = parent.getGlobalRotation();
+		double parentScale = parent.getGlobalScale();
+
+		double[][] inverseTranslation = MathUtil
+				.translationMatrix(new double[] { -parentPosition[0], -parentPosition[1] });
+		double[][] inverseRotation = MathUtil.rotationMatrix(-parentRotation);
+		double[][] inverseScale = MathUtil.scaleMatrix(1 / parentScale);
+		double[][] inverseMatrix = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+
+		// s * r * t = m-1
+		inverseMatrix = MathUtil.multiply(inverseScale, inverseRotation);
+		inverseMatrix = MathUtil.multiply(inverseMatrix, inverseTranslation);
+
+		// convert from translation to point
+		double[] temp = Arrays.copyOf(globalPosition, 3);
+		temp[2] = 1;// this changes it from vector to point
+
+		temp = MathUtil.multiply(inverseMatrix, temp);
+	
+		this.myTranslation[0] = temp[0];
+		this.myTranslation[1] = temp[1];
+
+		this.setScale(globalScale / parentScale);
+		this.setRotation(MathUtil.normaliseAngle(globalRotation - parentRotation));
 
 	}
 
