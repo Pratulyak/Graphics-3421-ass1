@@ -40,11 +40,11 @@ public class Camera extends GameObject {
     
     public void setView(GL2 gl) {
         
-        // TODO 1. clear the view to the background colour
+        // 1. clear the view to the background colour
     	gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
-        // TODO 2. set the view matrix to account for the camera's position
+        // 2. set the view matrix to account for the camera's position
         gl.glScaled(1 / this.getGlobalScale(), 1 / this.getScale(), 1);
         gl.glRotated(-this.getGlobalRotation(), 0, 0, 1);
         gl.glTranslated(-this.getGlobalPosition()[0], -this.getGlobalPosition()[1], 0);

@@ -30,11 +30,11 @@ public class TestMyCoolGameObject {
 		// Should not break if we apply transformations for example
 		// If we uncommented these lines (or wrote other transformations) 
 		// it should not break your object
-		/**
-		cgo.translate(-0.2,0.2);
-		cgo.rotate(45);
-		cgo.scale(0.25);
-		**/    
+		
+		//cgo.translate(-0.2,0.2);
+		//cgo.rotate(45);
+		//cgo.scale(0.25);
+		   
 	}
    
     /**
